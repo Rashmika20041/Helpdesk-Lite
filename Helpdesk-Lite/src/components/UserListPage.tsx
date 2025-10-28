@@ -2,6 +2,7 @@ import Navbar from "./Navbar";
 import { mockTickets } from "../data/mockTickets";
 import type { Ticket } from "../data/mockTickets";
 import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 
 function UserListPage() {
     const [tickets, setTickets] = useState<Ticket[]>(mockTickets);
@@ -12,6 +13,7 @@ function UserListPage() {
         description: '',
         priority: 'LOW' as 'LOW' | 'MEDIUM' | 'HIGH'
     });
+    const navigate = useNavigate();
 
     const itemsPerPage = 5;
     const totalPages = Math.ceil(tickets.length / itemsPerPage);
@@ -31,12 +33,12 @@ function UserListPage() {
                 priority: newTicket.priority,
                 status: 'OPEN',
                 createdDate: new Date().toISOString().split('T')[0],
-                userId: 1 // Assuming current user
+                userId: 1
             };
             setTickets([ticket, ...tickets]);
             setNewTicket({ title: '', description: '', priority: 'LOW' });
             setShowCreateModal(false);
-            setCurrentPage(1); // Reset to first page
+            setCurrentPage(1);
         }
     };
 
@@ -115,7 +117,11 @@ function UserListPage() {
                         </thead>
                         <tbody className="divide-y divide-gray-100">
                             {paginatedTickets.map((ticket) => (
-                                <tr key={ticket.id} className="hover:bg-blue-50 transition-colors duration-150">
+                                <tr
+                                    key={ticket.id}
+                                    onClick={() => navigate(`/ticket/${ticket.id}`)}
+                                    className="hover:bg-blue-50 transition-colors duration-150 cursor-pointer"
+                                >
                                     <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
                                         {ticket.title}
                                     </td>

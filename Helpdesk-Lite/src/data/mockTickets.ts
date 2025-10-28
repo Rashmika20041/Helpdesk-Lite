@@ -1,4 +1,11 @@
 // src/data/mockTickets.ts
+export interface Comment {
+  id: number;
+  text: string;
+  author: string;
+  createdDate: string;
+}
+
 export interface Ticket {
   id: number;
   title: string;
@@ -7,6 +14,7 @@ export interface Ticket {
   status: 'OPEN' | 'IN_PROGRESS' | 'RESOLVED';
   createdDate: string;
   userId: number;
+  comments?: Comment[];
 }
 
 export const mockTickets: Ticket[] = [
@@ -17,7 +25,21 @@ export const mockTickets: Ticket[] = [
     priority: 'HIGH',
     status: 'OPEN',
     createdDate: '2025-10-28',
-    userId: 1
+    userId: 1,
+    comments: [
+      {
+        id: 1,
+        text: 'Please try a hard reset by holding the power button for 10 seconds.',
+        author: 'IT Support',
+        createdDate: '2025-10-28T10:30:00Z'
+      },
+      {
+        id: 2,
+        text: 'Tried the hard reset, still not working. Computer makes a clicking sound.',
+        author: 'John Doe',
+        createdDate: '2025-10-28T11:15:00Z'
+      }
+    ]
   },
   {
     id: 2,
@@ -26,7 +48,15 @@ export const mockTickets: Ticket[] = [
     priority: 'MEDIUM',
     status: 'IN_PROGRESS',
     createdDate: '2025-10-27',
-    userId: 2
+    userId: 2,
+    comments: [
+      {
+        id: 3,
+        text: 'Ordered new toner cartridge. Should arrive tomorrow.',
+        author: 'IT Support',
+        createdDate: '2025-10-27T14:20:00Z'
+      }
+    ]
   },
   {
     id: 3,
@@ -35,7 +65,15 @@ export const mockTickets: Ticket[] = [
     priority: 'MEDIUM',
     status: 'RESOLVED',
     createdDate: '2025-10-26',
-    userId: 1
+    userId: 1,
+    comments: [
+      {
+        id: 4,
+        text: 'Cleared Outlook cache and restarted the application. Issue resolved.',
+        author: 'IT Support',
+        createdDate: '2025-10-26T16:45:00Z'
+      }
+    ]
   },
   {
     id: 4,
@@ -44,7 +82,21 @@ export const mockTickets: Ticket[] = [
     priority: 'HIGH',
     status: 'OPEN',
     createdDate: '2025-10-28',
-    userId: 3
+    userId: 3,
+    comments: [
+      {
+        id: 5,
+        text: 'Please try connecting to a different WiFi network to isolate the issue.',
+        author: 'IT Support',
+        createdDate: '2025-10-28T09:00:00Z'
+      },
+      {
+        id: 6,
+        text: 'Tried different network, same issue. Seems to be a router problem.',
+        author: 'Jane Smith',
+        createdDate: '2025-10-28T09:30:00Z'
+      }
+    ]
   },
   {
     id: 5,
@@ -53,7 +105,15 @@ export const mockTickets: Ticket[] = [
     priority: 'LOW',
     status: 'IN_PROGRESS',
     createdDate: '2025-10-25',
-    userId: 2
+    userId: 2,
+    comments: [
+      {
+        id: 7,
+        text: 'Installation in progress. Will notify when complete.',
+        author: 'IT Support',
+        createdDate: '2025-10-25T13:10:00Z'
+      }
+    ]
   },
   {
     id: 6,
@@ -62,7 +122,15 @@ export const mockTickets: Ticket[] = [
     priority: 'HIGH',
     status: 'RESOLVED',
     createdDate: '2025-10-24',
-    userId: 1
+    userId: 1,
+    comments: [
+      {
+        id: 8,
+        text: 'Password has been reset. Check your email for temporary password.',
+        author: 'IT Support',
+        createdDate: '2025-10-24T08:15:00Z'
+      }
+    ]
   },
   {
     id: 7,
@@ -80,6 +148,14 @@ export const mockTickets: Ticket[] = [
     priority: 'LOW',
     status: 'IN_PROGRESS',
     createdDate: '2025-10-23',
-    userId: 3
+    userId: 3,
+    comments: [
+      {
+        id: 9,
+        text: 'Please try an external keyboard to confirm if it\'s a hardware issue.',
+        author: 'IT Support',
+        createdDate: '2025-10-23T15:45:00Z'
+      }
+    ]
   }
 ];
