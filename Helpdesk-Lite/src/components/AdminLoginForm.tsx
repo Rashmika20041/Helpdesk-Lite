@@ -1,11 +1,18 @@
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 
 function AdminLoginForm() {
+  const navigate = useNavigate();
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    // Simple admin authentication - in real app, this would validate credentials
+    navigate('/admin/tickets');
+  };
   return (
     <div className="min-h-screen bg-gradient-to-br from-red-400 via-orange-500 to-yellow-500 flex items-center justify-center p-4">
       <div className="bg-white/10 backdrop-blur-lg rounded-2xl shadow-2xl p-8 w-full max-w-md border border-white/20">
         <h2 className="text-3xl font-bold text-white text-center mb-8">Admin Login</h2>
-        <form className="space-y-6">
+        <form className="space-y-6" onSubmit={handleSubmit}>
           <div>
             <label htmlFor="adminUsername" className="block text-white font-medium mb-2">
               Admin Username
