@@ -1,13 +1,18 @@
 
 
 import { useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link, useNavigate, useLocation } from 'react-router-dom';
+import { useAuth } from '../contexts/AuthContext';
 
 function UserLoginForm() {
   const [error, setError] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const navigate = useNavigate();
+  const location = useLocation();
+  const { login } = useAuth();
+
+  const from = location.state?.from?.pathname || '/tickets';
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -25,26 +30,16 @@ function UserLoginForm() {
     }
 
     try {
-      const res = await fetch('http://localhost:3000/api/auth/login', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email, password }),
-      });
-
-      const data = await res.json();
-      if (!res.ok) {
-        setError(data.message || 'Login failed');
-        setIsLoading(false);
-        return;
+      const success = await login(email, password, 'user');
+      if (success) {
+        // Redirect to the page they were trying to access or tickets page
+        navigate(from, { replace: true });
+      } else {
+        setError('Invalid credentials');
       }
-
-      // Store JWT token
-      localStorage.setItem('token', data.token);
-
-      // Redirect to tickets page
-      navigate('/tickets');
     } catch (err: any) {
       setError(err?.message || 'Network error');
+    } finally {
       setIsLoading(false);
     }
   };
@@ -109,6 +104,8 @@ function UserLoginForm() {
         </form>
         <p className="text-white/70 text-center mt-6">
           Don't have an account? <Link to="/register" className="text-white font-semibold hover:underline">Sign up</Link>
+          <br />
+          <Link to="/admin" className="text-white font-semibold hover:underline mt-2 block">Admin Login</Link>
         </p>
       </div>
     </div>

@@ -4,7 +4,7 @@ const express = require('express');
 const router = express.Router();
 
 
-router.get('/admin-dashboard', authMiddleware, adminMiddleware, (req, res) => {
+router.get('/admin/ticket', authMiddleware, adminMiddleware, (req, res) => {
     res.json({ message: 'Welcome to the Admin Dashboard' });
 });
 

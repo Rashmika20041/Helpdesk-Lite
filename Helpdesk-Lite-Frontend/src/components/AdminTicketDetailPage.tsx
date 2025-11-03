@@ -1,31 +1,74 @@
 import { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import Navbar from "./Navbar";
-import { mockTickets } from "../data/mockTickets";
-import type { Ticket } from "../data/mockTickets";
 
 function AdminTicketDetailPage() {
     const { id } = useParams<{ id: string }>();
     const navigate = useNavigate();
-    const [ticket, setTicket] = useState<Ticket | null>(null);
+    const [ticket, setTicket] = useState<any>(null);
+    const [loading, setLoading] = useState(true);
+    const [error, setError] = useState('');
     const [assignedTo, setAssignedTo] = useState("");
 
     useEffect(() => {
         if (id) {
-            const foundTicket = mockTickets.find(t => t.id === parseInt(id));
-            if (foundTicket) {
-                setTicket(foundTicket);
-                // Set initial assignment if ticket has userId
-                setAssignedTo(`User #${foundTicket.userId}`);
-            } else {
-                navigate('/admin/tickets');
-            }
+            fetchTicketDetails(id);
         }
-    }, [id, navigate]);
+    }, [id]);
 
-    const handleStatusChange = (newStatus: 'OPEN' | 'IN_PROGRESS' | 'RESOLVED') => {
-        if (ticket) {
-            setTicket({ ...ticket, status: newStatus });
+    const fetchTicketDetails = async (ticketId: string) => {
+        try {
+            const token = localStorage.getItem('token');
+            const response = await fetch(`http://localhost:3000/api/tickets/${ticketId}`, {
+                headers: {
+                    'Authorization': `Bearer ${token}`,
+                    'Content-Type': 'application/json'
+                }
+            });
+
+            const data = await response.json();
+
+            if (data.success) {
+                setTicket(data.ticket);
+                setAssignedTo(data.ticket.assignedTo || 'Unassigned');
+            } else {
+                setError(data.message || 'Failed to load ticket');
+                if (response.status === 404) {
+                    navigate('/admin/tickets');
+                }
+            }
+        } catch (err) {
+            setError('Failed to load ticket details');
+            console.error('Error fetching ticket:', err);
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    const handleStatusChange = async (newStatus: 'OPEN' | 'IN_PROGRESS' | 'RESOLVED') => {
+        if (!ticket) return;
+
+        try {
+            const token = localStorage.getItem('token');
+            const response = await fetch(`http://localhost:3000/api/tickets/admin/${ticket.id}`, {
+                method: 'PUT',
+                headers: {
+                    'Authorization': `Bearer ${token}`,
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ status: newStatus, assignedTo })
+            });
+
+            const data = await response.json();
+
+            if (data.success) {
+                setTicket({ ...ticket, status: newStatus });
+            } else {
+                setError(data.message || 'Failed to update ticket status');
+            }
+        } catch (err) {
+            setError('Failed to update ticket status');
+            console.error('Error updating status:', err);
         }
     };
 
@@ -34,12 +77,34 @@ function AdminTicketDetailPage() {
         // In real app, this would update the ticket assignment
     };
 
-    if (!ticket) {
+    if (loading) {
         return (
             <>
                 <Navbar />
                 <div className="flex justify-center items-center h-64">
                     <div className="text-gray-500">Loading ticket details...</div>
+                </div>
+            </>
+        );
+    }
+
+    if (error) {
+        return (
+            <>
+                <Navbar />
+                <div className="flex justify-center items-center h-64">
+                    <div className="text-red-500">{error}</div>
+                </div>
+            </>
+        );
+    }
+
+    if (!ticket) {
+        return (
+            <>
+                <Navbar />
+                <div className="flex justify-center items-center h-64">
+                    <div className="text-gray-500">Ticket not found</div>
                 </div>
             </>
         );
@@ -96,7 +161,7 @@ function AdminTicketDetailPage() {
 
                                     <div>
                                         <span className="text-sm font-medium text-gray-500">Created by:</span>
-                                        <span className="ml-2 text-sm text-gray-600">User #{ticket.userId}</span>
+                                        <span className="ml-2 text-sm text-gray-600">{ticket.user_name} ({ticket.user_email})</span>
                                     </div>
                                 </div>
                             </div>

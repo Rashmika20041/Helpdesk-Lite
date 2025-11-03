@@ -44,17 +44,76 @@ const loginUser = async (req, res) => {
     const isMatch = await bcrypt.compare(password, user.password);
     if (!isMatch) return res.status(401).json({ message: 'Invalid credentials', success: false });
 
+    // Check if user has user role (not admin)
+    if (user.role !== 'user') {
+      return res.status(403).json({ message: 'Access denied. User login only.', success: false });
+    }
+
     const token = jwt.sign({ 
-        userId: user._id,
+        userId: user.id,
         username: user.username,
         role: user.role
     }, process.env.JWT_SECRET, { expiresIn: '1h' });
 
-    return res.status(200).json({ message: 'Login successful', success: true, token });
+    return res.status(200).json({ 
+      message: 'Login successful', 
+      success: true, 
+      token,
+      user: {
+        id: user.id,
+        name: user.name,
+        email: user.email,
+        username: user.username,
+        role: user.role
+      }
+    });
   } catch (error) {
     console.error('Error logging in user:', error);
     return res.status(500).json({ message: 'Server error', success: false });
   }
 };
 
-module.exports = { registerUser, loginUser };
+// Login admin
+const loginAdmin = async (req, res) => {
+  try {
+    const { email, password } = req.body;
+    if (!email || !password) {
+      return res.status(400).json({ message: 'email and password are required', success: false });
+    }
+
+    const user = await findByEmail(email);
+    if (!user) return res.status(401).json({ message: 'Invalid credentials', success: false });
+
+    const isMatch = await bcrypt.compare(password, user.password);
+    if (!isMatch) return res.status(401).json({ message: 'Invalid credentials', success: false });
+
+    // Check if user has admin role
+    if (user.role !== 'admin') {
+      return res.status(403).json({ message: 'Access denied. Admin login only.', success: false });
+    }
+
+    const token = jwt.sign({ 
+        userId: user.id,
+        username: user.username,
+        role: user.role
+    }, process.env.JWT_SECRET, { expiresIn: '1h' });
+
+    return res.status(200).json({ 
+      message: 'Admin login successful', 
+      success: true, 
+      token,
+      user: {
+        id: user.id,
+        name: user.name,
+        email: user.email,
+        username: user.username,
+        role: user.role
+      }
+    });
+  } catch (error) {
+    console.error('Error logging in admin:', error);
+    return res.status(500).json({ message: 'Server error', success: false });
+  }
+};
+
+module.exports = { registerUser, loginUser, loginAdmin };

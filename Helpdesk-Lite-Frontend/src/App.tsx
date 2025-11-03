@@ -1,5 +1,7 @@
 
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
+import { AuthProvider } from './contexts/AuthContext';
+import ProtectedRoute from './components/ProtectedRoute';
 import UserLoginForm from "./components/UserLoginForm"
 import UserRegisterForm from "./components/UserRegisterFrom"
 import AdminLoginForm from "./components/AdminLoginForm"
@@ -11,17 +13,36 @@ import AdminTicketDetailPage from './components/AdminTicketDetailPage';
 function App() {
 
   return (
-    <Router>
-      <Routes>
-        <Route path="/" element={<UserLoginForm />} />
-        <Route path="/register" element={<UserRegisterForm />} />
-        <Route path="/admin" element={<AdminLoginForm />} />
-        <Route path="/admin/tickets" element={<AdminListPage />} />
-        <Route path="/admin/ticket/:id" element={<AdminTicketDetailPage />} />
-        <Route path="/tickets" element={<UserListPage />} />
-        <Route path="/ticket/:id" element={<TicketDetailsPage />} />
-      </Routes>
-    </Router>
+    <AuthProvider>
+      <Router>
+        <Routes>
+          <Route path="/" element={<UserLoginForm />} />
+          <Route path="/register" element={<UserRegisterForm />} />
+          <Route path="/admin" element={<AdminLoginForm />} />
+          <Route path="/admin/login" element={<AdminLoginForm />} />
+          <Route path="/admin/tickets" element={
+            <ProtectedRoute requiredRole="admin">
+              <AdminListPage />
+            </ProtectedRoute>
+          } />
+          <Route path="/admin/ticket/:id" element={
+            <ProtectedRoute requiredRole="admin">
+              <AdminTicketDetailPage />
+            </ProtectedRoute>
+          } />
+          <Route path="/tickets" element={
+            <ProtectedRoute requiredRole="user">
+              <UserListPage />
+            </ProtectedRoute>
+          } />
+          <Route path="/ticket/:id" element={
+            <ProtectedRoute requiredRole="user">
+              <TicketDetailsPage />
+            </ProtectedRoute>
+          } />
+        </Routes>
+      </Router>
+    </AuthProvider>
   )
 }
 

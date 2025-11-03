@@ -26,6 +26,35 @@ const connectDB = async () => {
     `;
     await conn.query(createUsersTableSQL);
 
+    const createTicketsTableSQL = `
+      CREATE TABLE IF NOT EXISTS tickets (
+        id INT PRIMARY KEY AUTO_INCREMENT,
+        title VARCHAR(255) NOT NULL,
+        description TEXT,
+        priority ENUM('LOW', 'MEDIUM', 'HIGH') DEFAULT 'LOW',
+        status ENUM('OPEN', 'IN_PROGRESS', 'RESOLVED') DEFAULT 'OPEN',
+        user_id INT NOT NULL,
+        assigned_to VARCHAR(255),
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+        FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+      ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+    `;
+    await conn.query(createTicketsTableSQL);
+
+    const createCommentsTableSQL = `
+      CREATE TABLE IF NOT EXISTS comments (
+        id INT PRIMARY KEY AUTO_INCREMENT,
+        ticket_id INT NOT NULL,
+        user_id INT NOT NULL,
+        comment_text TEXT NOT NULL,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        FOREIGN KEY (ticket_id) REFERENCES tickets(id) ON DELETE CASCADE,
+        FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+      ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+    `;
+    await conn.query(createCommentsTableSQL);
+
     console.log(`Database '${config.database}' connected successfully`);
 
     return conn;

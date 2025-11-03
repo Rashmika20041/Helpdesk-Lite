@@ -1,24 +1,89 @@
 import Navbar from "./Navbar";
-import { mockTickets } from "../data/mockTickets";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 
 function AdminListPage() {
+    const [tickets, setTickets] = useState<any[]>([]);
+    const [loading, setLoading] = useState(true);
+    const [error, setError] = useState('');
     const [currentPage, setCurrentPage] = useState(1);
+    const [searchTerm, setSearchTerm] = useState('');
+    const [statusFilter, setStatusFilter] = useState('ALL');
     const navigate = useNavigate();
 
     const itemsPerPage = 5;
-    const totalPages = Math.ceil(mockTickets.length / itemsPerPage);
-    const startIndex = (currentPage - 1) * itemsPerPage;
-    const paginatedTickets = mockTickets.slice(startIndex, startIndex + itemsPerPage);
+
+    // Filter tickets based on search term and status filter
+    const filteredTickets = tickets.filter(ticket => {
+        const matchesSearch = searchTerm === '' ||
+            (ticket.title && ticket.title.toLowerCase().includes(searchTerm.toLowerCase())) ||
+            (ticket.description && ticket.description.toLowerCase().includes(searchTerm.toLowerCase())) ||
+            (ticket.user_name && ticket.user_name.toLowerCase().includes(searchTerm.toLowerCase())) ||
+            (ticket.user_email && ticket.user_email.toLowerCase().includes(searchTerm.toLowerCase()));
+
+        const matchesStatus = statusFilter === 'ALL' || ticket.status === statusFilter;
+
+        return matchesSearch && matchesStatus;
+    });
+
+    const filteredTotalPages = Math.ceil(filteredTickets.length / itemsPerPage);
+    const filteredStartIndex = (currentPage - 1) * itemsPerPage;
+    const paginatedFilteredTickets = filteredTickets.slice(filteredStartIndex, filteredStartIndex + itemsPerPage);
+
+    useEffect(() => {
+        fetchTickets();
+    }, []);
+
+    useEffect(() => {
+        // Reset to first page when filters change
+        setCurrentPage(1);
+    }, [searchTerm, statusFilter]);
+
+    const fetchTickets = async () => {
+        try {
+            const token = localStorage.getItem('token');
+            const response = await fetch('http://localhost:3000/api/tickets/admin/all', {
+                headers: {
+                    'Authorization': `Bearer ${token}`,
+                    'Content-Type': 'application/json'
+                }
+            });
+
+            const data = await response.json();
+
+            if (data.success) {
+                setTickets(data.tickets);
+            } else {
+                setError(data.message || 'Failed to load tickets');
+            }
+        } catch (err) {
+            setError('Failed to load tickets');
+            console.error('Error fetching tickets:', err);
+        } finally {
+            setLoading(false);
+        }
+    };
 
     const handlePageChange = (page: number) => {
-        setCurrentPage(page);
+        if (page >= 1 && page <= filteredTotalPages) {
+            setCurrentPage(page);
+        }
     };
 
     return(
         <>
         <Navbar/>
+        {loading && (
+            <div className="flex justify-center items-center h-64">
+                <div className="text-gray-500">Loading tickets...</div>
+            </div>
+        )}
+        {error && (
+            <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded mx-6 mt-6">
+                {error}
+            </div>
+        )}
+        {!loading && !error && (
         <div>
              <div className="flex justify-between items-center p-6 pt-10 bg-white">
                 <h1 className="text-2xl font-bold text-gray-900">
@@ -38,7 +103,12 @@ function AdminListPage() {
                             <input
                                 type="text"
                                 id="search"
-                                placeholder="Search by title or description..."
+                                placeholder="Search by title, description, or user..."
+                                value={searchTerm}
+                                onChange={(e) => {
+                                    setSearchTerm(e.target.value);
+                                    setCurrentPage(1); // Reset to first page when searching
+                                }}
                                 className="w-80 pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-transparent"
                             />
                             <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
@@ -54,6 +124,11 @@ function AdminListPage() {
                         </label>
                         <select
                             id="status-filter"
+                            value={statusFilter}
+                            onChange={(e) => {
+                                setStatusFilter(e.target.value);
+                                setCurrentPage(1); // Reset to first page when filtering
+                            }}
                             className="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-transparent min-w-40"
                         >
                             <option value="ALL">All Status</option>
@@ -90,7 +165,7 @@ function AdminListPage() {
                             </tr>
                         </thead>
                         <tbody className="divide-y divide-gray-100">
-                            {paginatedTickets.map((ticket) => (
+                            {paginatedFilteredTickets.map((ticket: any) => (
                                 <tr
                                     key={ticket.id}
                                     onClick={() => navigate(`/admin/ticket/${ticket.id}`)}
@@ -121,7 +196,7 @@ function AdminListPage() {
                                         </span>
                                     </td>
                                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                                        User #{ticket.userId}
+                                        {ticket.user_name} ({ticket.user_email})
                                     </td>
                                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                                         {new Date(ticket.createdDate).toLocaleDateString()}
@@ -133,10 +208,10 @@ function AdminListPage() {
                 </div>
 
                 {/* Creative Pagination */}
-                {totalPages > 1 && (
+                {filteredTotalPages > 1 && (
                     <div className="flex items-center justify-between mt-6 px-4 py-3 bg-white border-t border-gray-200 rounded-lg shadow-sm">
                         <div className="flex items-center text-sm text-gray-700">
-                            <span>Showing {startIndex + 1} to {Math.min(startIndex + itemsPerPage, mockTickets.length)} of {mockTickets.length} tickets</span>
+                            <span>Showing {filteredStartIndex + 1} to {Math.min(filteredStartIndex + itemsPerPage, filteredTickets.length)} of {filteredTickets.length} tickets</span>
                         </div>
                         <div className="flex items-center space-x-2">
                             <button
@@ -151,7 +226,7 @@ function AdminListPage() {
                             </button>
 
                             <div className="flex space-x-1">
-                                {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (
+                                {Array.from({ length: filteredTotalPages }, (_, i) => i + 1).map((page) => (
                                     <button
                                         key={page}
                                         onClick={() => handlePageChange(page)}
@@ -168,7 +243,7 @@ function AdminListPage() {
 
                             <button
                                 onClick={() => handlePageChange(currentPage + 1)}
-                                disabled={currentPage === totalPages}
+                                disabled={currentPage === filteredTotalPages}
                                 className="flex items-center px-3 py-2 text-sm font-medium text-gray-500 bg-white border border-gray-300 rounded-md hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors duration-200"
                             >
                                 Next
@@ -181,6 +256,7 @@ function AdminListPage() {
                 )}
              </div>
         </div>
+        )}
         </>
     )
 }

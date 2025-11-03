@@ -42,7 +42,7 @@ function UserRegisterForm() {
         return;
       }
 
-      // Registration succeeded; redirect to login or home
+      // Registration succeeded; redirect to login page
       navigate('/');
     } catch (err: any) {
       setError(err?.message || 'Network error');

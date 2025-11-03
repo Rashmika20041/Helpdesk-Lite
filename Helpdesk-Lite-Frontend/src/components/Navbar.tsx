@@ -1,13 +1,15 @@
 import { Link, useNavigate } from 'react-router-dom';
 import { useState } from 'react';
+import { useAuth } from '../contexts/AuthContext';
 import Logo from '../assets/logo.png';
 
 function Navbar() {
   const navigate = useNavigate();
+  const { logout, user } = useAuth();
   const [showLogoutModal, setShowLogoutModal] = useState(false);
 
   const handleLogout = () => {
-    // In a real app, you would clear authentication tokens/session here
+    logout();
     navigate('/');
   };
 
@@ -37,9 +39,11 @@ function Navbar() {
           {/* Right side: Profile Username */}
           <div className="flex items-center">
             <div className="flex items-center space-x-3">
-              <span className="text-gray-700 font-medium">Welcome, John Doe</span>
+              <span className="text-gray-700 font-medium">Welcome, {user?.name || 'User'}</span>
               <div className="w-8 h-8 bg-gray-300 rounded-full flex items-center justify-center">
-                <span className="text-gray-600 font-semibold text-sm">JD</span>
+                <span className="text-gray-600 font-semibold text-sm">
+                  {user?.name ? user.name.split(' ').map((n: string) => n[0]).join('').toUpperCase() : 'U'}
+                </span>
               </div>
               <button
                 onClick={handleLogoutClick}

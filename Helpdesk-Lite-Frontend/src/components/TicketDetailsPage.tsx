@@ -3,29 +3,88 @@ import { useParams, useNavigate } from "react-router-dom";
 import Navbar from "./Navbar";
 import { mockTickets } from "../data/mockTickets";
 import type { Ticket } from "../data/mockTickets";
+import { useAuth } from "../contexts/AuthContext";
 
 function TicketDetailsPage() {
     const { id } = useParams<{ id: string }>();
     const navigate = useNavigate();
     const [ticket, setTicket] = useState<Ticket | null>(null);
+    const [loading, setLoading] = useState(true);
+    const [error, setError] = useState('');
 
     useEffect(() => {
         if (id) {
-            const foundTicket = mockTickets.find(t => t.id === parseInt(id));
-            if (foundTicket) {
-                setTicket(foundTicket);
-            } else {
-                navigate('/tickets');
-            }
+            fetchTicketDetails(id);
         }
-    }, [id, navigate]);
+    }, [id]);
+
+    const fetchTicketDetails = async (ticketId: string) => {
+        try {
+            const token = localStorage.getItem('token');
+            const response = await fetch(`http://localhost:3000/api/tickets/${ticketId}`, {
+                headers: {
+                    'Authorization': `Bearer ${token}`,
+                    'Content-Type': 'application/json'
+                }
+            });
+
+            const data = await response.json();
+
+            if (data.success) {
+                // Convert API response to match Ticket interface
+                const formattedTicket: Ticket = {
+                    id: data.ticket.id,
+                    title: data.ticket.title,
+                    description: data.ticket.description,
+                    priority: data.ticket.priority,
+                    status: data.ticket.status,
+                    createdDate: data.ticket.createdDate,
+                    userId: data.ticket.userId,
+                    comments: data.ticket.comments || []
+                };
+                setTicket(formattedTicket);
+            } else {
+                setError(data.message || 'Failed to load ticket');
+                if (response.status === 404) {
+                    navigate('/tickets');
+                }
+            }
+        } catch (err) {
+            setError('Failed to load ticket details');
+            console.error('Error fetching ticket:', err);
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    if (loading) {
+        return (
+            <>
+                <Navbar />
+                <div className="flex justify-center items-center h-64">
+                    <div className="text-gray-500">Loading ticket details...</div>
+                </div>
+            </>
+        );
+    }
+
+    if (error) {
+        return (
+            <>
+                <Navbar />
+                <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded mx-6 mt-6">
+                    {error}
+                </div>
+            </>
+        );
+    }
 
     if (!ticket) {
         return (
             <>
                 <Navbar />
                 <div className="flex justify-center items-center h-64">
-                    <div className="text-gray-500">Loading ticket details...</div>
+                    <div className="text-gray-500">Ticket not found</div>
                 </div>
             </>
         );
