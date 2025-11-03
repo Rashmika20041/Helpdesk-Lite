@@ -5,7 +5,7 @@ const jwt = require('jsonwebtoken');
 // Register new user (SQL-backed)
 const registerUser = async (req, res) => {
   try {
-    const { name, email, username, password, role } = req.body || {};
+    const { name, email, username, password, role } = req.body;
     if (!email || !username || !password) {
       return res.status(400).json({ message: 'email, username and password are required', success: false });
     }
@@ -33,7 +33,7 @@ const registerUser = async (req, res) => {
 // Login user
 const loginUser = async (req, res) => {
   try {
-    const { email, password } = req.body || {};
+    const { email, password } = req.body;
     if (!email || !password) {
       return res.status(400).json({ message: 'email and password are required', success: false });
     }
@@ -44,8 +44,11 @@ const loginUser = async (req, res) => {
     const isMatch = await bcrypt.compare(password, user.password);
     if (!isMatch) return res.status(401).json({ message: 'Invalid credentials', success: false });
 
-    const payloadId = user.id || user.user_id || user.insertId || user.ID || user.Id;
-    const token = jwt.sign({ id: payloadId }, process.env.JWT_SECRET || 'secret', { expiresIn: '1h' });
+    const token = jwt.sign({ 
+        userId: user._id,
+        username: user.username,
+        role: user.role
+    }, process.env.JWT_SECRET, { expiresIn: '1h' });
 
     return res.status(200).json({ message: 'Login successful', success: true, token });
   } catch (error) {

@@ -30,22 +30,6 @@ const connectDB = async () => {
 
     return conn;
   } catch (error) {
-    if (error && (error.code === 'ER_BAD_DB_ERROR' || error.errno === 1049)) {
-      console.warn(`Database '${config.database}' not found. Creating...`);
-
-      const adminConn = await mysql.createConnection({
-        host: config.host,
-        user: config.user,
-        password: config.password,
-        port: config.port
-      });
-      await adminConn.query(`CREATE DATABASE IF NOT EXISTS \`${config.database}\` DEFAULT CHARACTER SET utf8mb4 DEFAULT COLLATE utf8mb4_general_ci`);
-      await adminConn.end();
-      console.log(`Database '${config.database}' created successfully`);
-
-      return connectDB();
-    }
-
     console.error('Database connection failed:', error && error.message ? error.message : error);
     process.exit(1);
   }
